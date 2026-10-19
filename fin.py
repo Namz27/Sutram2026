@@ -113,9 +113,9 @@ def verify(artifact_id:int):
         return {"status":"MODIFIED"}
 
 @app.get("/evidence_list/{artifact_id}/download")
-def download_evidence(atrifact_id:int):
+def download_evidence(artifact_id:int):
     conn = get_db()
-    row = conn.execute("SELECT * FROM evidence_list WHERE  artifact_id = ?",(atrifact_id,)).fetchone()
+    row = conn.execute("SELECT * FROM evidence_list WHERE  artifact_id = ?",(artifact_id,)).fetchone()
     if row is None:
         raise HTTPException(404, "No such evidence logged.")
     file_path = Path(row["stored_path"])
