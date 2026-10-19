@@ -28,7 +28,12 @@ function renderTable(items) {
         </span>
       </td>
       <td class="py-3 px-3">
-        <div class="font-medium text-slate-200">${escapeHtml(item.original_filename)}</div>
+        <a href="/evidence_list/${item.artifact_id}/download" 
+           class="font-medium text-indigo-400 hover:text-indigo-300 hover:underline inline-flex items-center gap-1.5"
+           title="Click to download original file">
+          <i class="fa-solid fa-download text-[11px]"></i>
+          ${escapeHtml(item.original_filename)}
+        </a>
         <div class="text-[11px] text-slate-500">${formatBytes(item.size_bytes)}</div>
       </td>
       <td class="py-3 px-3 text-slate-300 text-xs max-w-xs">

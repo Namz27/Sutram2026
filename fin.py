@@ -112,6 +112,22 @@ def verify(artifact_id:int):
     else:
         return {"status":"MODIFIED"}
 
+@app.get("/evidence_list/{artifact_id}/download")
+def download_evidence(atrifact_id:int):
+    conn = get_db()
+    row = conn.execute("SELECT * FROM evidence_list WHERE  artifact_id = ?",(atrifact_id,)).fetchone()
+    if row is None:
+        raise HTTPException(404, "No such evidence logged.")
+    file_path = Path(row["stored_path"])
+    if file_path.is_file == False:
+        raise HTTPException(404, "Evidence file missing on server disk.")
+    return FileResponse(
+        path=file_path,
+        filename=row["original_filename"],
+        media_type="application/octet-stream"
+    )
+
+
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.get("/")
