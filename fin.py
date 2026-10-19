@@ -5,8 +5,14 @@ from datetime import datetime,timezone
 from pathlib import Path
 import filetype
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
-app = FastAPI()
+
+
+
+app = FastAPI(title="Evidence_Log")
 store = Path("evidence_store")
 store.mkdir(exist_ok=True)
 DB_FILE = "evidence.db"
@@ -28,7 +34,8 @@ connect.execute("""
         stored_path         TEXT NOT NULL,
         size_bytes          INTEGER NOT NULL,
         sha256              TEXT NOT NULL UNIQUE,
-        added_at_utc        TEXT NOT NULL
+        added_at_utc        TEXT NOT NULL,
+        remarks             TEXT
     )
 """)
 connect.commit()
@@ -44,7 +51,7 @@ def sha256(path, chunk_size = 1024*1024):
     return h.hexdigest() 
 
 @app.post("/evidence_list")
-async def upload(case_id:str = Form(...), file: UploadFile = File(...)):
+async def upload(case_id:str = Form(...), file: UploadFile = File(...), Remarks:str= Form(None)):
     temp_path = store / (uuid.uuid4().hex + ".tmp")
     chunk_size = 1024*1024
 
@@ -70,8 +77,8 @@ async def upload(case_id:str = Form(...), file: UploadFile = File(...)):
 
     record = conn.execute( 
         """INSERT INTO evidence_list
-        (case_id, original_filename, stored_path, size_bytes, sha256, added_at_utc) VALUES (?,?,?,?,?,?)""",
-        (case_id, file.filename, str(final_path), size, result, datetime.now(timezone.utc).isoformat())
+        (case_id, original_filename, stored_path, size_bytes, sha256, added_at_utc, remarks) VALUES (?,?,?,?,?,?,?)""",
+        (case_id, file.filename, str(final_path), size, result, datetime.now(timezone.utc).isoformat(), Remarks)
 
     )
     conn.commit()
@@ -104,3 +111,9 @@ def verify(artifact_id:int):
         return {"status":"intact"}
     else:
         return {"status":"MODIFIED"}
+
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+@app.get("/")
+def home_ui():
+    return FileResponse("static/index.html")
